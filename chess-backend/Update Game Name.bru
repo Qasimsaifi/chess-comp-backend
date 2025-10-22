@@ -1,0 +1,21 @@
+meta {
+  name: Update Game Name
+  type: http
+  seq: 4
+}
+
+put {
+  url: http://localhost:3000/api/games/68f64f05c2389c0db8ef9f3f
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "name": "Updated Game Name"
+  }
+}
+
+settings {
+  encodeUrl: true
+}

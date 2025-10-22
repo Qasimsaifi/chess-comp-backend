@@ -1,0 +1,23 @@
+meta {
+  name: Add a Move
+  type: http
+  seq: 5
+}
+
+post {
+  url: http://localhost:3000/api/moves
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "gameId": "68f655c6ffa3881ca3f2c494",
+    "move": "b4d2",
+    "by": "user"
+  }
+}
+
+settings {
+  encodeUrl: true
+}

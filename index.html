@@ -1,0 +1,1416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Chess Game</title>
+    <link rel="stylesheet" href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 50%, #7e22ce 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 25px 80px rgba(0, 0, 0, 0.4);
+            padding: 35px;
+            max-width: 1400px;
+            width: 100%;
+            display: grid;
+            grid-template-columns: 650px 1fr;
+            gap: 35px;
+        }
+
+        .board-section {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .card {
+            background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
+            border-radius: 16px;
+            padding: 25px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .card h2 {
+            font-size: 20px;
+            margin-bottom: 18px;
+            color: #1e293b;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 700;
+        }
+
+        .card h2::before {
+            content: '';
+            width: 4px;
+            height: 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 2px;
+        }
+
+        #board {
+            width: 600px;
+            margin: 0 auto;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
+            border-radius: 8px;
+        }
+
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            max-height: 100vh;
+            overflow-y: auto;
+        }
+
+        .btn {
+            padding: 14px 28px;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .btn:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+            color: white;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+            color: white;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .side-selection {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+
+        .side-btn {
+            flex: 1;
+            padding: 16px;
+            border: 2px solid #e2e8f0;
+            background: white;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            font-size: 15px;
+        }
+
+        .side-btn:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+        }
+
+        .side-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: #667eea;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .game-info {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-top: 15px;
+        }
+
+        .info-item {
+            padding: 16px;
+            background: white;
+            border-radius: 10px;
+            text-align: center;
+            border: 2px solid #f1f5f9;
+            transition: all 0.3s ease;
+        }
+
+        .info-item:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+        }
+
+        .info-label {
+            font-size: 11px;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .info-value {
+            font-size: 18px;
+            font-weight: 800;
+            color: #1e293b;
+        }
+
+        .evaluation-bar-container {
+            width: 100%;
+            height: 30px;
+            background: #1e293b;
+            border-radius: 8px;
+            overflow: hidden;
+            position: relative;
+            margin-top: 10px;
+        }
+
+        .evaluation-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #10b981 0%, #34d399 100%);
+            transition: width 0.5s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 13px;
+        }
+
+        .moves-list {
+            max-height: 350px;
+            overflow-y: auto;
+            background: white;
+            border-radius: 10px;
+            padding: 12px;
+        }
+
+        .moves-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .moves-list::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 3px;
+        }
+
+        .moves-list::-webkit-scrollbar-thumb {
+            background: #667eea;
+            border-radius: 3px;
+        }
+
+        .move-item {
+            padding: 12px 16px;
+            margin-bottom: 8px;
+            background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
+            border-radius: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+            border: 1px solid #e2e8f0;
+            transition: all 0.3s ease;
+        }
+
+        .move-item:hover {
+            transform: translateX(4px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .move-item:last-child {
+            background: linear-gradient(145deg, #ede9fe 0%, #ddd6fe 100%);
+            border: 2px solid #667eea;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.9; }
+        }
+
+        .move-number {
+            font-weight: 800;
+            color: #667eea;
+            margin-right: 12px;
+            font-size: 13px;
+        }
+
+        .move-notation {
+            flex: 1;
+            font-family: 'Courier New', monospace;
+            font-weight: 600;
+            font-size: 15px;
+        }
+
+        .move-by {
+            font-size: 10px;
+            padding: 4px 10px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 6px;
+            text-transform: uppercase;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        .move-by.engine {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 14px;
+            margin-bottom: 12px;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 10px;
+            animation: blink 2s infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .status-indicator.connected {
+            background: #10b981;
+            box-shadow: 0 0 12px #10b981;
+        }
+
+        .status-indicator.disconnected {
+            background: #dc3545;
+        }
+
+        .connection-status {
+            display: flex;
+            align-items: center;
+            font-size: 13px;
+            color: #64748b;
+            padding: 12px 16px;
+            background: white;
+            border-radius: 10px;
+            font-weight: 600;
+            border: 2px solid #f1f5f9;
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+        }
+
+        .loading-content {
+            background: white;
+            padding: 40px 60px;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+        }
+
+        .spinner {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #667eea;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .game-list {
+            max-height: 280px;
+            overflow-y: auto;
+        }
+
+        .game-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .game-list::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 3px;
+        }
+
+        .game-list::-webkit-scrollbar-thumb {
+            background: #667eea;
+            border-radius: 3px;
+        }
+
+        .game-item {
+            padding: 16px;
+            background: white;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid #e2e8f0;
+        }
+
+        .game-item:hover {
+            background: linear-gradient(145deg, #f8fafc 0%, #f1f5f9 100%);
+            border-color: #667eea;
+            transform: translateX(4px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+        }
+
+        .game-item.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: #667eea;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .game-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .game-item-name {
+            font-weight: 700;
+            font-size: 15px;
+        }
+
+        .game-item-delete {
+            padding: 6px 12px;
+            background: rgba(220, 53, 69, 0.1);
+            color: #dc3545;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: 700;
+            transition: all 0.3s ease;
+        }
+
+        .game-item-delete:hover {
+            background: #dc3545;
+            color: white;
+        }
+
+        .game-item.active .game-item-delete {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+
+        .game-item-info {
+            font-size: 12px;
+            opacity: 0.8;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .game-item-info span {
+            padding: 4px 8px;
+            background: rgba(102, 126, 234, 0.1);
+            border-radius: 4px;
+            font-weight: 600;
+        }
+
+        .game-item.active .game-item-info span {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .controls-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .btn-small {
+            padding: 10px 16px;
+            font-size: 12px;
+        }
+
+        .move-navigation {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+            align-items: center;
+        }
+
+        .move-navigation button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 16px;
+        }
+
+        .move-navigation button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .move-navigation button:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .move-position {
+            padding: 8px 12px;
+            background: white;
+            border-radius: 6px;
+            font-weight: 700;
+            font-size: 13px;
+            color: #1e293b;
+            white-space: nowrap;
+        }
+
+        .game-name-edit {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px;
+            background: white;
+            border-radius: 10px;
+            border: 2px solid #e2e8f0;
+            margin-bottom: 15px;
+        }
+
+        .game-name-input {
+            flex: 1;
+            padding: 8px 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .game-name-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .game-name-display {
+            flex: 1;
+            font-weight: 700;
+            font-size: 15px;
+            color: #1e293b;
+        }
+
+        .btn-icon {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 6px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+
+        .btn-icon:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-icon.cancel {
+            background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+        }
+
+        @media (max-width: 1200px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+            
+            #board {
+                width: 100%;
+                max-width: 600px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="board-section">
+            <div class="card">
+                <h2>Chess Board</h2>
+                <div id="board"></div>
+                <div class="evaluation-bar-container">
+                    <div class="evaluation-bar" id="evalBar" style="width: 50%;">
+                        <span id="evalText">0.00</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="sidebar">
+            <div class="card">
+                <h2>New Game</h2>
+                <input type="text" id="gameName" placeholder="Enter game name (optional)">
+                <div class="side-selection">
+                    <button class="side-btn active" data-side="white">⚪ White</button>
+                    <button class="side-btn" data-side="black">⚫ Black</button>
+                </div>
+                <button class="btn btn-primary" style="width: 100%;" onclick="createNewGame()">🎮 Start New Game</button>
+            </div>
+
+            <div class="card">
+                <h2>Game Status</h2>
+                <div id="gameNameContainer" style="display: none;">
+                    <div class="game-name-edit" id="gameNameDisplay">
+                        <span class="game-name-display" id="currentGameName">No game loaded</span>
+                        <button class="btn-icon" onclick="editGameName()" title="Edit game name">✏️</button>
+                    </div>
+                    <div class="game-name-edit" id="gameNameEdit" style="display: none;">
+                        <input type="text" class="game-name-input" id="gameNameInput" placeholder="Enter game name">
+                        <button class="btn-icon" onclick="saveGameName()" title="Save">💾</button>
+                        <button class="btn-icon cancel" onclick="cancelEditName()" title="Cancel">✖️</button>
+                    </div>
+                </div>
+                <div class="connection-status">
+                    <span class="status-indicator" id="wsStatus"></span>
+                    <span id="wsText">Connecting...</span>
+                </div>
+                <div class="game-info">
+                    <div class="info-item">
+                        <div class="info-label">Your Side</div>
+                        <div class="info-value" id="playerSide">-</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Turn</div>
+                        <div class="info-value" id="currentTurn">-</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Moves</div>
+                        <div class="info-value" id="moveCount">0</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Status</div>
+                        <div class="info-value" id="gameStatus">-</div>
+                    </div>
+                </div>
+                <div class="controls-grid">
+                    <button class="btn btn-secondary btn-small" onclick="flipBoard()">🔄 Flip Board</button>
+                    <button class="btn btn-secondary btn-small" onclick="undoMove()" id="undoBtn" disabled>↶ Undo</button>
+                    <button class="btn btn-secondary btn-small" onclick="exportPGN()">📥 Export PGN</button>
+                    <button class="btn btn-danger btn-small" onclick="deleteCurrentGame()" id="deleteBtn" disabled>🗑️ Delete</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>Move History</h2>
+                <div class="move-navigation">
+                    <button onclick="goToStart()" id="startBtn" disabled>⏮️</button>
+                    <button onclick="previousMove()" id="prevBtn" disabled>◀️</button>
+                    <div class="move-position" id="movePosition">Start</div>
+                    <button onclick="nextMove()" id="nextBtn" disabled>▶️</button>
+                    <button onclick="goToEnd()" id="endBtn" disabled>⏭️</button>
+                </div>
+                <div class="moves-list" id="movesList">
+                    <div style="text-align: center; color: #94a3b8; padding: 30px;">
+                        <div style="font-size: 48px; margin-bottom: 10px;">♟️</div>
+                        <div style="font-weight: 600;">No moves yet</div>
+                        <div style="font-size: 12px; margin-top: 5px;">Start a game to see moves</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>Saved Games</h2>
+                <div class="game-list" id="gamesList">
+                    <div style="text-align: center; color: #94a3b8; padding: 30px;">
+                        <div style="font-size: 48px; margin-bottom: 10px;">📚</div>
+                        <div style="font-weight: 600;">No saved games</div>
+                        <div style="font-size: 12px; margin-top: 5px;">Create a new game to get started</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card" id="editGameCard" style="display: none;">
+                <h2>Edit Game Name</h2>
+                <div class="game-name-edit">
+                    <input type="text" class="game-name-input" id="editGameNameInput" placeholder="Enter new game name">
+                    <button class="btn-icon" onclick="updateSelectedGameName()" title="Save">💾</button>
+                    <button class="btn-icon cancel" onclick="closeEditGameName()" title="Cancel">✖️</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="loadingOverlay" class="loading-overlay" style="display: none;">
+        <div class="loading-content">
+            <div class="spinner"></div>
+            <div class="loading-text">Engine is thinking...</div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+    <script>
+        const API_BASE = 'http://localhost:3000';
+        const WS_URL = 'ws://localhost:3000/ws';
+        
+        let ws = null;
+        let board = null;
+        let game = new Chess();
+        let currentGameId = null;
+        let playerSide = 'white';
+        let gameData = null;
+        let isProcessing = false;
+        let moveHistory = [];
+        let currentMoveIndex = -1;
+        let editingGameId = null;
+
+        function initChessboard() {
+            const config = {
+                draggable: true,
+                position: 'start',
+                onDragStart: onDragStart,
+                onDrop: onDrop,
+                onSnapEnd: onSnapEnd,
+                pieceTheme: 'https://chessboardjs.com/img/chesspieces/wikipedia/{piece}.png'
+            };
+            board = Chessboard('board', config);
+        }
+
+        function onDragStart(source, piece, position, orientation) {
+            if (!currentGameId || isProcessing) return false;
+            if (game.game_over()) return false;
+            
+            const turn = game.turn();
+            if ((turn === 'w' && playerSide === 'black') || (turn === 'b' && playerSide === 'white')) {
+                return false;
+            }
+            
+            if ((turn === 'w' && piece.search(/^b/) !== -1) ||
+                (turn === 'b' && piece.search(/^w/) !== -1)) {
+                return false;
+            }
+        }
+
+        function onDrop(source, target) {
+            const move = game.move({
+                from: source,
+                to: target,
+                promotion: 'q'
+            });
+
+            if (move === null) return 'snapback';
+            
+            makeMove(move.san);
+        }
+
+        function onSnapEnd() {
+            board.position(game.fen());
+        }
+
+        async function makeMove(moveNotation) {
+            if (isProcessing) return;
+            
+            try {
+                isProcessing = true;
+                showLoading(true);
+                
+                const moveUCI = convertSanToUci(moveNotation);
+                
+                const response = await fetch(`${API_BASE}/api/moves`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        gameId: currentGameId,
+                        move: moveUCI,
+                        by: 'user'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    game.load(data.newFen);
+                    board.position(game.fen());
+                    await loadMoves();
+                    updateGameInfo();
+                    
+                    if (data.engineMove) {
+                        // Wait for engine move to complete
+                        setTimeout(async () => {
+                            try {
+                                game.move(convertUciToSan(data.engineMove));
+                                board.position(game.fen());
+                                await loadMoves();
+                                updateGameInfo();
+                            } catch (error) {
+                                console.error('Error processing engine move:', error);
+                            } finally {
+                                showLoading(false);
+                                isProcessing = false;
+                            }
+                        }, 800);
+                    } else {
+                        showLoading(false);
+                        isProcessing = false;
+                    }
+                } else {
+                    game.undo();
+                    board.position(game.fen());
+                    alert(data.message || 'Invalid move');
+                    showLoading(false);
+                    isProcessing = false;
+                }
+            } catch (error) {
+                console.error('Error making move:', error);
+                game.undo();
+                board.position(game.fen());
+                alert('Error making move');
+                showLoading(false);
+                isProcessing = false;
+            }
+        }
+
+        function convertSanToUci(san) {
+            const history = game.history({ verbose: true });
+            const lastMove = history[history.length - 1];
+            let uci = lastMove.from + lastMove.to;
+            if (lastMove.promotion) {
+                uci += lastMove.promotion;
+            }
+            return uci;
+        }
+
+        function convertUciToSan(uci) {
+            const from = uci.substring(0, 2);
+            const to = uci.substring(2, 4);
+            const promotion = uci.length > 4 ? uci.substring(4) : undefined;
+            
+            const move = game.move({
+                from: from,
+                to: to,
+                promotion: promotion
+            });
+            
+            return move ? move.san : null;
+        }
+
+        function initWebSocket() {
+            ws = new WebSocket(WS_URL);
+            
+            ws.onopen = () => {
+                console.log('WebSocket connected');
+                updateConnectionStatus(true);
+            };
+            
+            ws.onclose = () => {
+                console.log('WebSocket disconnected');
+                updateConnectionStatus(false);
+                setTimeout(initWebSocket, 3000);
+            };
+            
+            ws.onerror = (error) => {
+                console.error('WebSocket error:', error);
+            };
+            
+            ws.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                console.log('WebSocket message:', data);
+                
+                if (data.type === 'update' && data.gameId === currentGameId) {
+                    game.load(data.fen);
+                    board.position(game.fen());
+                    loadMoves();
+                    updateGameInfo();
+                } else if (data.type === 'delete' && data.gameId === currentGameId) {
+                    alert('This game was deleted');
+                    currentGameId = null;
+                    game.reset();
+                    board.position('start');
+                    loadGames();
+                    document.getElementById('deleteBtn').disabled = true;
+                    document.getElementById('undoBtn').disabled = true;
+                } else if (data.type === 'updateGame') {
+                    loadGames();
+                }
+            };
+        }
+
+        function updateConnectionStatus(connected) {
+            const status = document.getElementById('wsStatus');
+            const text = document.getElementById('wsText');
+            if (connected) {
+                status.classList.add('connected');
+                status.classList.remove('disconnected');
+                text.textContent = 'Connected to server';
+            } else {
+                status.classList.remove('connected');
+                status.classList.add('disconnected');
+                text.textContent = 'Disconnected';
+            }
+        }
+
+        function showLoading(show) {
+            document.getElementById('loadingOverlay').style.display = show ? 'flex' : 'none';
+        }
+
+        async function createNewGame() {
+            const name = document.getElementById('gameName').value || 'Chess Game ' + new Date().toLocaleString();
+            
+            try {
+                showLoading(true);
+                const response = await fetch(`${API_BASE}/api/games`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ side: playerSide, name })
+                });
+                
+                const data = await response.json();
+                currentGameId = data.gameId;
+                game.load(data.fen);
+                board.position(game.fen());
+                
+                if (playerSide === 'black') {
+                    board.orientation('black');
+                } else {
+                    board.orientation('white');
+                }
+                
+                await loadGame(currentGameId);
+                await loadGames();
+                document.getElementById('gameName').value = '';
+                document.getElementById('deleteBtn').disabled = false;
+                updateEvaluationBar(0);
+                updateGameNameDisplay();
+                showLoading(false);
+            } catch (error) {
+                console.error('Error creating game:', error);
+                alert('Error creating game');
+                showLoading(false);
+            }
+        }
+
+        async function loadGame(gameId) {
+            try {
+                const response = await fetch(`${API_BASE}/api/games/${gameId}`);
+                gameData = await response.json();
+                currentGameId = gameId;
+                playerSide = gameData.side;
+                
+                game.load(gameData.fen);
+                board.position(game.fen());
+                
+                if (playerSide === 'black') {
+                    board.orientation('black');
+                } else {
+                    board.orientation('white');
+                }
+                
+                await loadMoves();
+                updateGameInfo();
+                updateGameNameDisplay();
+                document.getElementById('deleteBtn').disabled = false;
+                document.getElementById('undoBtn').disabled = game.history().length === 0;
+            } catch (error) {
+                console.error('Error loading game:', error);
+            }
+        }
+
+        async function loadMoves() {
+            if (!currentGameId) return;
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/moves/${currentGameId}`);
+                const moves = await response.json();
+                
+                // Store move history for navigation
+                moveHistory = moves.map(m => m.fenAfterMove);
+                currentMoveIndex = moveHistory.length - 1;
+                
+                const movesList = document.getElementById('movesList');
+                if (moves.length === 0) {
+                    movesList.innerHTML = `
+                        <div style="text-align: center; color: #94a3b8; padding: 30px;">
+                            <div style="font-size: 48px; margin-bottom: 10px;">♟️</div>
+                            <div style="font-weight: 600;">No moves yet</div>
+                            <div style="font-size: 12px; margin-top: 5px;">Make your first move!</div>
+                        </div>
+                    `;
+                    updateNavigationButtons();
+                    return;
+                }
+                
+                movesList.innerHTML = moves.map((move, index) => `
+                    <div class="move-item" onclick="goToMove(${index})" style="cursor: pointer;">
+                        <span class="move-number">${Math.floor(index / 2) + 1}${index % 2 === 0 ? '.' : '...'}</span>
+                        <span class="move-notation">${move.move}</span>
+                        <span class="move-by ${move.by}">${move.by === 'user' ? '👤' : '🤖'} ${move.by}</span>
+                    </div>
+                `).join('');
+                
+                document.getElementById('moveCount').textContent = moves.length;
+                document.getElementById('undoBtn').disabled = moves.length === 0;
+                movesList.scrollTop = movesList.scrollHeight;
+                
+                updateNavigationButtons();
+                updateMovePosition();
+            } catch (error) {
+                console.error('Error loading moves:', error);
+            }
+        }
+
+        function updateGameInfo() {
+            const turn = game.turn();
+            document.getElementById('playerSide').textContent = playerSide === 'white' ? '⚪ White' : '⚫ Black';
+            document.getElementById('currentTurn').textContent = turn === 'w' ? '⚪ White' : '⚫ Black';
+            document.getElementById('gameStatus').textContent = game.game_over() ? 
+                (game.in_checkmate() ? 'Checkmate' : game.in_draw() ? 'Draw' : 'Game Over') : 
+                (game.in_check() ? 'Check!' : 'Ongoing');
+        }
+
+        async function loadGames() {
+            try {
+                const response = await fetch(`${API_BASE}/api/games`);
+                const games = await response.json();
+                
+                const gamesList = document.getElementById('gamesList');
+                if (games.length === 0) {
+                    gamesList.innerHTML = `
+                        <div style="text-align: center; color: #94a3b8; padding: 30px;">
+                            <div style="font-size: 48px; margin-bottom: 10px;">📚</div>
+                            <div style="font-weight: 600;">No saved games</div>
+                            <div style="font-size: 12px; margin-top: 5px;">Create a new game to get started</div>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                gamesList.innerHTML = games.map(game => `
+                    <div class="game-item ${game._id === currentGameId ? 'active' : ''}" onclick="loadGame('${game._id}')">
+                        <div class="game-item-header">
+                            <div class="game-item-name">${game.name}</div>
+                            <div style="display: flex; gap: 5px;">
+                                <button class="game-item-delete" style="background: rgba(102, 126, 234, 0.1); color: #667eea;" onclick="event.stopPropagation(); openEditGameName('${game._id}', '${game.name.replace(/'/g, "\\'")}')">✏️ Edit</button>
+                                <button class="game-item-delete" onclick="event.stopPropagation(); deleteGame('${game._id}')">🗑️ Delete</button>
+                            </div>
+                        </div>
+                        <div class="game-item-info">
+                            <span>${game.side === 'white' ? '⚪ White' : '⚫ Black'}</span>
+                            <span>📊 ${game.moves?.length || 0} moves</span>
+                            <span>${game.status === 'ongoing' ? '▶️ Active' : '✓ Finished'}</span>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Error loading games:', error);
+            }
+        }
+
+        async function deleteGame(gameId) {
+            if (!confirm('Are you sure you want to delete this game?')) return;
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/games/${gameId}`, {
+                    method: 'DELETE'
+                });
+                
+                if (response.ok) {
+                    if (gameId === currentGameId) {
+                        currentGameId = null;
+                        gameData = null;
+                        game.reset();
+                        board.position('start');
+                        document.getElementById('deleteBtn').disabled = true;
+                        document.getElementById('undoBtn').disabled = true;
+                        updateGameInfo();
+                        updateGameNameDisplay();
+                    }
+                    await loadGames();
+                }
+            } catch (error) {
+                console.error('Error deleting game:', error);
+                alert('Error deleting game');
+            }
+        }
+
+        async function deleteCurrentGame() {
+            if (currentGameId) {
+                await deleteGame(currentGameId);
+            }
+        }
+
+        function flipBoard() {
+            board.flip();
+        }
+
+        function undoMove() {
+            if (game.history().length === 0 || !currentGameId) return;
+            alert('Undo functionality requires backend implementation');
+        }
+
+        function exportPGN() {
+            if (!currentGameId) {
+                alert('No active game to export');
+                return;
+            }
+            
+            const pgn = game.pgn();
+            const blob = new Blob([pgn], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `chess_game_${currentGameId}.pgn`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function updateEvaluationBar(evaluation) {
+            const evalBar = document.getElementById('evalBar');
+            const evalText = document.getElementById('evalText');
+            
+            // Convert evaluation to percentage (capped at -10 to +10)
+            const cappedEval = Math.max(-10, Math.min(10, evaluation));
+            const percentage = ((cappedEval + 10) / 20) * 100;
+            
+            evalBar.style.width = percentage + '%';
+            
+            if (evaluation > 0) {
+                evalText.textContent = '+' + evaluation.toFixed(2);
+                evalBar.style.background = 'linear-gradient(90deg, #10b981 0%, #34d399 100%)';
+            } else if (evaluation < 0) {
+                evalText.textContent = evaluation.toFixed(2);
+                evalBar.style.background = 'linear-gradient(90deg, #ef4444 0%, #f87171 100%)';
+            } else {
+                evalText.textContent = '0.00';
+                evalBar.style.background = 'linear-gradient(90deg, #94a3b8 0%, #cbd5e1 100%)';
+            }
+        }
+
+        // Move Navigation Functions
+        function goToStart() {
+            currentMoveIndex = -1;
+            game.reset();
+            board.position(game.fen());
+            updateNavigationButtons();
+            updateMovePosition();
+        }
+
+        function previousMove() {
+            if (currentMoveIndex >= 0) {
+                currentMoveIndex--;
+                if (currentMoveIndex === -1) {
+                    game.reset();
+                } else {
+                    game.load(moveHistory[currentMoveIndex]);
+                }
+                board.position(game.fen());
+                updateNavigationButtons();
+                updateMovePosition();
+            }
+        }
+
+        function nextMove() {
+            if (currentMoveIndex < moveHistory.length - 1) {
+                currentMoveIndex++;
+                game.load(moveHistory[currentMoveIndex]);
+                board.position(game.fen());
+                updateNavigationButtons();
+                updateMovePosition();
+            }
+        }
+
+        function goToEnd() {
+            if (moveHistory.length > 0) {
+                currentMoveIndex = moveHistory.length - 1;
+                game.load(moveHistory[currentMoveIndex]);
+                board.position(game.fen());
+                updateNavigationButtons();
+                updateMovePosition();
+            }
+        }
+
+        function goToMove(index) {
+            currentMoveIndex = index;
+            game.load(moveHistory[index]);
+            board.position(game.fen());
+            updateNavigationButtons();
+            updateMovePosition();
+        }
+
+        function updateNavigationButtons() {
+            const hasHistory = moveHistory.length > 0;
+            const atStart = currentMoveIndex === -1;
+            const atEnd = currentMoveIndex === moveHistory.length - 1;
+
+            document.getElementById('startBtn').disabled = !hasHistory || atStart;
+            document.getElementById('prevBtn').disabled = !hasHistory || atStart;
+            document.getElementById('nextBtn').disabled = !hasHistory || atEnd;
+            document.getElementById('endBtn').disabled = !hasHistory || atEnd;
+        }
+
+        function updateMovePosition() {
+            const positionText = document.getElementById('movePosition');
+            if (currentMoveIndex === -1) {
+                positionText.textContent = 'Start';
+            } else {
+                const moveNumber = Math.floor(currentMoveIndex / 2) + 1;
+                const isWhiteMove = currentMoveIndex % 2 === 0;
+                positionText.textContent = `Move ${moveNumber}${isWhiteMove ? '.' : '...'}`;
+            }
+        }
+
+        // Game Name Edit Functions
+        function updateGameNameDisplay() {
+            const container = document.getElementById('gameNameContainer');
+            const nameDisplay = document.getElementById('currentGameName');
+            
+            if (currentGameId && gameData) {
+                container.style.display = 'block';
+                nameDisplay.textContent = gameData.name || 'Unnamed Game';
+            } else {
+                container.style.display = 'none';
+            }
+        }
+
+        function editGameName() {
+            const display = document.getElementById('gameNameDisplay');
+            const edit = document.getElementById('gameNameEdit');
+            const input = document.getElementById('gameNameInput');
+            
+            input.value = gameData.name || '';
+            display.style.display = 'none';
+            edit.style.display = 'flex';
+            input.focus();
+        }
+
+        function cancelEditName() {
+            const display = document.getElementById('gameNameDisplay');
+            const edit = document.getElementById('gameNameEdit');
+            
+            display.style.display = 'flex';
+            edit.style.display = 'none';
+        }
+
+        async function saveGameName() {
+            const input = document.getElementById('gameNameInput');
+            const newName = input.value.trim();
+            
+            if (!newName) {
+                alert('Game name cannot be empty');
+                return;
+            }
+            
+            if (!currentGameId) {
+                alert('No game selected');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/games/${currentGameId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name: newName })
+                });
+                
+                if (response.ok) {
+                    const updatedGame = await response.json();
+                    gameData.name = updatedGame.name;
+                    updateGameNameDisplay();
+                    cancelEditName();
+                    await loadGames();
+                } else {
+                    alert('Failed to update game name');
+                }
+            } catch (error) {
+                console.error('Error updating game name:', error);
+                alert('Error updating game name');
+            }
+        }
+
+        // Edit game name from saved games list
+        function openEditGameName(gameId, currentName) {
+            editingGameId = gameId;
+            const input = document.getElementById('editGameNameInput');
+            const card = document.getElementById('editGameCard');
+            
+            input.value = currentName;
+            card.style.display = 'block';
+            input.focus();
+            
+            // Scroll to the edit card
+            card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        function closeEditGameName() {
+            editingGameId = null;
+            document.getElementById('editGameCard').style.display = 'none';
+            document.getElementById('editGameNameInput').value = '';
+        }
+
+        async function updateSelectedGameName() {
+            const input = document.getElementById('editGameNameInput');
+            const newName = input.value.trim();
+            
+            if (!newName) {
+                alert('Game name cannot be empty');
+                return;
+            }
+            
+            if (!editingGameId) {
+                alert('No game selected');
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/games/${editingGameId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name: newName })
+                });
+                
+                if (response.ok) {
+                    // If editing the current game, update gameData
+                    if (editingGameId === currentGameId) {
+                        const updatedGame = await response.json();
+                        gameData.name = updatedGame.name;
+                        updateGameNameDisplay();
+                    }
+                    
+                    closeEditGameName();
+                    await loadGames();
+                } else {
+                    alert('Failed to update game name');
+                }
+            } catch (error) {
+                console.error('Error updating game name:', error);
+                alert('Error updating game name');
+            }
+        }
+
+        // Add keyboard support for game name input
+        document.addEventListener('DOMContentLoaded', () => {
+            const input = document.getElementById('gameNameInput');
+            if (input) {
+                input.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        saveGameName();
+                    } else if (e.key === 'Escape') {
+                        cancelEditName();
+                    }
+                });
+            }
+            
+            const editInput = document.getElementById('editGameNameInput');
+            if (editInput) {
+                editInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        updateSelectedGameName();
+                    } else if (e.key === 'Escape') {
+                        closeEditGameName();
+                    }
+                });
+            }
+        });
+
+        document.querySelectorAll('.side-btn').forEach(btn => {
+            btn.onclick = function() {
+                document.querySelectorAll('.side-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                playerSide = this.dataset.side;
+            };
+        });
+
+        // Initialize
+        initChessboard();
+        initWebSocket();
+        loadGames();
+    </script>
+</body>
+</html>
